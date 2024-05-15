@@ -55,7 +55,7 @@ jobs:
         with:
           severity: info
           text: Deployment of a new version of Bloglist triggered!
-          description: Version is deployed to https://bloglist-exercise.onrender.com/
+          description: Version is deployed to https://bloglist-cicd-634p.onrender.com/
           details: Author of the commit was ${{ github.event.head_commit.author.username }}
           webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
       - name: Inform Discord in case of failure when pushing or merging
