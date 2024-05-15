@@ -1,0 +1,79 @@
+name: Deployment pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+  simple_deployment_pipeline:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm install
+      - name: Check style
+        run: npm run lint
+      - name: build
+        run: npm run build
+      - name: test backend
+        env:
+          TEST_MONGODB_URI: ${{ secrets.TEST_MONGODB_URI }}
+          SECRET_FOR_TOKEN: ${{ secrets.SECRET_FOR_TOKEN }}
+          BACKEND_PORT: ${{ vars.BACKEND_PORT }}
+        run: npm run test-backend
+      - name: test frontend
+        run: npm run test-frontend
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: e2e tests
+        env:
+          TEST_MONGODB_URI: ${{ secrets.TEST_MONGODB_URI }}
+          SECRET_FOR_TOKEN: ${{ secrets.SECRET_FOR_TOKEN }}
+          BACKEND_PORT: ${{ vars.BACKEND_PORT }}
+          CI: ${{ true }}
+        run: npm run test-e2e
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+      - name: Trigger deployment
+        if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message), '#skip') }}
+        run: curl https://api.render.com/deploy/srv-${{ secrets.RENDER_SERVICE_ID }}?key=${{ secrets.RENDER_API_KEY }}
+      - name: Inform Discord in case of success when publishing or merging
+        uses: rjstone/discord-webhook-notify@89b0bf43c2c8514f70d0dcba4a706b904e8a3112
+        if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message), '#skip') && success() }}
+        with:
+          severity: info
+          text: Deployment of a new version of Bloglist triggered!
+          description: Version is deployed to https://bloglist-exercise.onrender.com/
+          details: Author of the commit was ${{ github.event.head_commit.author.username }}
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+      - name: Inform Discord in case of failure when pushing or merging
+        uses: rjstone/discord-webhook-notify@89b0bf43c2c8514f70d0dcba4a706b904e8a3112
+        if: ${{ github.event_name == 'push' && failure() }}
+        with:
+          severity: error
+          text: Build failed
+          description: Commit ${{ github.event.head_commit.url }} by ${{ github.event.head_commit.author.username }} broke the build :(
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+  tag_release:
+    needs: [simple_deployment_pipeline]
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump version and push tag
+        if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message), '#skip') }}
+        uses: anothrNick/github-tag-action@a2c70ae13a881faf2b4953baaa9e49731997ab36
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BUMP: patch
