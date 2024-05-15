@@ -1,6 +1,6 @@
 # Bloglist in a single repo
 
-This repository was made for exercise 11.20 Your own pipeline in [Part 11](https://fullstackopen.com/osa11) of [Full Stack open](https://fullstackopen.com/) course. In this exercise the Bloglist app that was earlier developed in separate repositories for backend, frontend and end to end tests was packed to a single repository for building deployment pipeline for the app.
+This repository was made for exercise 11.20 Your own pipeline in [Part 11](https://fullstackopen.com/en/part11) of [Full Stack open](https://fullstackopen.com/en/) course. In this exercise the Bloglist app that was earlier developed in separate repositories for backend, frontend and end to end tests was packed to a single repository for building deployment pipeline for the app.
 
 ## Structure of the repository
 
