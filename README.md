@@ -44,15 +44,7 @@ When frontend is build for production, the `backend_url` gets empty string as it
 
 ## Testing
 
-When backend, frontend and end to end tests were all in different repositories, the following tools and scripts were used for testing:
-
-| repository         | tool | script                                               |
-|--------------------|------|-------------------------------------------------------|
-| backend            | jest | `cross-env NODE_ENV=test jest --verbose --runInBand`  |
-| frontend           | vitest | `vitest run`                                        |
-| end to end tests   | playwright | `playwright show-report`                        |
-
-Now following commands are used for testing:
+The following commands are used for testing:
 
 | command | used for |
 |---------| ---------|
